@@ -23,11 +23,34 @@ const plexArabic = IBM_Plex_Sans_Arabic({
   display: "swap",
 });
 
-// Favicon / app icons come from app/icon.png and app/apple-icon.png
-// (Next.js metadata file conventions) — both copies of public/logo.png.
+// Absolute base for og:image / icons. Vercel sets these automatically; falls
+// back to a configurable URL, then localhost for dev.
+const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+const siteUrl = vercelUrl
+  ? `https://${vercelUrl}`
+  : process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+const TITLE = "عيادات د. مها دحلان للجلدية والتجميل بجدة";
+const DESC = "شاركنا رأيك في تجربتك مع عيادات د. مها دحلان، وأضف تقييمك على Google.";
+
+// Favicon / app icons come from app/icon.png and app/apple-icon.png, and the
+// link-preview image from app/opengraph-image.tsx (all from public/logo.png).
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "قيّم تجربتك | عيادات د. مها دحلان",
-  description: "شاركنا رأيك في تجربتك مع عيادات د. مها دحلان للجلدية والتجميل بجدة",
+  description: DESC,
+  openGraph: {
+    type: "website",
+    locale: "ar_SA",
+    siteName: "عيادات د. مها دحلان",
+    title: TITLE,
+    description: DESC,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESC,
+  },
 };
 
 export default function RootLayout({
