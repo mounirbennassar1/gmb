@@ -20,7 +20,7 @@ function avgWord(avg: number): string {
 function HeroStars({ value }: { value: number }) {
   const rounded = Math.round(value);
   return (
-    <div style={{ display: "flex", gap: 3, justifyContent: "flex-end" }}>
+    <div style={{ direction: "ltr", display: "flex", gap: 3, justifyContent: "flex-end" }}>
       {[1, 2, 3, 4, 5].map((n) => (
         <svg key={n} viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
           <path
@@ -179,7 +179,7 @@ export default async function Home() {
               </div>
             ) : (
               <div style={{ textAlign: "center" }}>
-                <div style={{ display: "flex", justifyContent: "center", gap: 4, marginBottom: 8 }}>
+                <div style={{ direction: "ltr", display: "flex", justifyContent: "center", gap: 4, marginBottom: 8 }}>
                   {[1, 2, 3, 4, 5].map((n) => (
                     <svg key={n} viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                       <path
@@ -232,7 +232,7 @@ export default async function Home() {
               color: "#9aa8a1",
             }}
           >
-            © {year} — {settings.clinicNameEn}
+            © {year} · {settings.clinicNameEn}
           </div>
         </div>
       </div>

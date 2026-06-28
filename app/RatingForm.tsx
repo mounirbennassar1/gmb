@@ -37,6 +37,22 @@ const fieldStyle: React.CSSProperties = {
   outline: "none",
 };
 
+const submitStyle: React.CSSProperties = {
+  width: "100%",
+  fontFamily: "var(--font-plex-arabic), sans-serif",
+  fontSize: 15.5,
+  fontWeight: 600,
+  letterSpacing: ".02em",
+  color: "#f3ecdd",
+  background: GREEN,
+  border: "none",
+  borderRadius: 14,
+  padding: 14,
+  cursor: "pointer",
+  boxShadow: "0 15px 28px -15px rgba(14,74,57,.85)",
+  transition: "all .2s",
+};
+
 function Star({ fill, size = 38 }: { fill: string; size?: number }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
@@ -54,10 +70,10 @@ export default function RatingForm({ writeReviewUrl, services, heading, sub }: P
   const [service, setService] = useState("");
   const [name, setName] = useState("");
   const [comment, setComment] = useState("");
-  const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<null | "google" | "internal">(null);
+  const [copied, setCopied] = useState(false);
 
   const active = hover || rating;
   const isHigh = rating >= 4;
@@ -67,43 +83,46 @@ export default function RatingForm({ writeReviewUrl, services, heading, sub }: P
     const res = await fetch("/api/reviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name.trim(),
-        rating,
-        comment: comment.trim(),
-        phone: phone.trim(),
-        serviceType: service,
-      }),
+      body: JSON.stringify({ name: name.trim(), rating, comment: comment.trim(), serviceType: service }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "تعذّر الإرسال");
     return data.id as string;
   }
 
-  // Happy path: open Google immediately (synchronously, so it isn't popup-
-  // blocked), then record the funnel hit in the background. No writing here —
-  // the visitor writes their review once, on Google.
-  function goToGoogle() {
-    if (writeReviewUrl) window.open(writeReviewUrl, "_blank", "noopener");
-    setDone("google");
-    saveReview()
-      .then((id) => fetch(`/api/reviews/${id}/clicked`, { method: "POST" }).catch(() => {}))
-      .catch(() => {});
-  }
-
-  // Save without funnelling to Google — used for low ratings (private feedback,
-  // optional note) and for high ratings when no Google link is configured.
-  async function saveAndThank() {
+  async function submit() {
     setError(null);
+    if (rating < 1) {
+      setError("الرجاء اختيار عدد النجوم");
+      return;
+    }
     setSubmitting(true);
     try {
-      await saveReview();
-      setDone("internal");
+      const id = await saveReview();
+      if (isHigh && writeReviewUrl) {
+        setDone("google");
+        fetch(`/api/reviews/${id}/clicked`, { method: "POST" }).catch(() => {});
+      } else {
+        setDone("internal");
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "تعذّر الإرسال");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  // Copy the written review so it can be pasted on Google, then open Google.
+  async function goToGoogle() {
+    if (comment.trim()) {
+      try {
+        await navigator.clipboard.writeText(comment.trim());
+        setCopied(true);
+      } catch {
+        /* clipboard may be blocked — not critical */
+      }
+    }
+    if (writeReviewUrl) window.open(writeReviewUrl, "_blank", "noopener");
   }
 
   function reset() {
@@ -112,20 +131,14 @@ export default function RatingForm({ writeReviewUrl, services, heading, sub }: P
     setService("");
     setName("");
     setComment("");
-    setPhone("");
     setSubmitting(false);
     setError(null);
     setDone(null);
+    setCopied(false);
   }
 
-  // ── Done states ──────────────────────────────────────────────
+  // ── Success screen ───────────────────────────────────────────
   if (done) {
-    const title = done === "google" ? "اكتب تقييمك الآن على Google" : "شكراً لملاحظتك";
-    const body =
-      done === "google"
-        ? "فتحنا لك صفحة Google — اكتب كلمتك الطيّبة هناك مباشرة. يسعدنا أنّ تجربتك كانت مميّزة 🌟"
-        : "نأسف أنّ التجربة لم تكن بالمستوى الذي تستحقه. لقد وصلت ملاحظتك إلى فريقنا وسنعمل على تحسينها.";
-
     return (
       <div style={{ textAlign: "center", padding: "6px 4px" }}>
         <div
@@ -145,22 +158,77 @@ export default function RatingForm({ writeReviewUrl, services, heading, sub }: P
             <path d="M20 6L9 17l-5-5" />
           </svg>
         </div>
-        <h2 style={{ fontFamily: "var(--font-messiri), sans-serif", fontWeight: 600, fontSize: 21, color: "#1c2b25", margin: "0 0 7px" }}>
-          {title}
-        </h2>
-        <p style={{ fontSize: 14, color: "#7a8b83", lineHeight: 1.75, margin: "0 auto 14px", maxWidth: 300 }}>
-          {body}
-        </p>
-        {done === "google" && writeReviewUrl && (
-          <a
-            href={writeReviewUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ display: "inline-block", fontFamily: "var(--font-plex-arabic), sans-serif", fontSize: 13, color: "#bf9a3f", textDecoration: "underline", textUnderlineOffset: 3 }}
-          >
-            لم تُفتح الصفحة؟ افتح Google
-          </a>
+
+        {done === "google" ? (
+          <>
+            <h2 style={{ fontFamily: "var(--font-messiri), sans-serif", fontWeight: 600, fontSize: 21, color: "#1c2b25", margin: "0 0 7px" }}>
+              شكراً لتقييمك الرائع
+            </h2>
+            <p style={{ fontSize: 14, color: "#7a8b83", lineHeight: 1.75, margin: "0 auto 14px", maxWidth: 300 }}>
+              يسعدنا أنّ تجربتك كانت مميّزة. انشر تقييمك على Google ليصل إلى غيرك.
+            </p>
+            <div
+              style={{
+                background: "#f7f4ec",
+                border: "1px solid rgba(14,74,57,.08)",
+                borderRadius: 12,
+                padding: "10px 14px",
+                margin: "0 auto 14px",
+                maxWidth: 322,
+                fontSize: 12.5,
+                lineHeight: 1.8,
+                color: "#6b7c74",
+              }}
+            >
+              على صفحة Google اختر <b style={{ color: "#1c2b25" }}>{"٠١٢٣٤٥"[rating]} نجوم</b>
+              {comment.trim() ? (
+                <>
+                  {" "}ثمّ الصق تعليقك (<b style={{ color: "#bf9a3f" }}>سننسخه لك</b>) وانشر.
+                </>
+              ) : (
+                <> واكتب كلمتك.</>
+              )}
+            </div>
+            <button
+              onClick={goToGoogle}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 9,
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "var(--font-plex-arabic), sans-serif",
+                fontSize: 15,
+                fontWeight: 600,
+                color: "#f3ecdd",
+                background: GREEN,
+                borderRadius: 13,
+                padding: "13px 24px",
+                boxShadow: "0 15px 28px -15px rgba(14,74,57,.85)",
+              }}
+            >
+              <span>أضف تقييمك على خرائط Google</span>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 17L17 7M9 7h8v8" />
+              </svg>
+            </button>
+            {copied && (
+              <p style={{ marginTop: 10, fontSize: 12.5, color: "#3f7d5f" }}>
+                ✓ نسخنا تعليقك، الصقه في مربّع المراجعة على Google
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            <h2 style={{ fontFamily: "var(--font-messiri), sans-serif", fontWeight: 600, fontSize: 21, color: "#1c2b25", margin: "0 0 7px" }}>
+              شكراً لملاحظتك
+            </h2>
+            <p style={{ fontSize: 14, color: "#7a8b83", lineHeight: 1.75, margin: "0 auto 14px", maxWidth: 300 }}>
+              نأسف أنّ التجربة لم تكن بالمستوى الذي تستحقه. لقد وصلت ملاحظتك إلى فريقنا وسنعمل على تحسينها.
+            </p>
+          </>
         )}
+
         <div style={{ marginTop: 16 }}>
           <button onClick={reset} style={{ background: "none", border: "none", color: "#9aa8a1", fontFamily: "var(--font-plex-arabic), sans-serif", fontSize: 13, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}>
             إغلاق
@@ -170,7 +238,7 @@ export default function RatingForm({ writeReviewUrl, services, heading, sub }: P
     );
   }
 
-  // ── Rating-first flow ────────────────────────────────────────
+  // ── Rating + review form ─────────────────────────────────────
   return (
     <div style={{ textAlign: "center" }}>
       <h2 style={{ fontFamily: "var(--font-messiri), sans-serif", fontWeight: 600, fontSize: 22, color: "#1c2b25", margin: "2px 0 4px" }}>
@@ -178,15 +246,15 @@ export default function RatingForm({ writeReviewUrl, services, heading, sub }: P
       </h2>
       <p style={{ fontSize: 13.5, color: "#7a8b83", margin: "0 0 18px" }}>{sub}</p>
 
-      {/* Stars */}
-      <div onMouseLeave={() => setHover(0)} style={{ display: "flex", justifyContent: "center", gap: 7, marginBottom: 9 }}>
+      {/* Stars — forced LTR so they read 1 → 5 left-to-right */}
+      <div onMouseLeave={() => setHover(0)} style={{ direction: "ltr", display: "flex", justifyContent: "center", gap: 7, marginBottom: 9 }}>
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
             type="button"
             onClick={() => setRating(n)}
             onMouseEnter={() => setHover(n)}
-            aria-label={`${n} من 5`}
+            aria-label={`${n} of 5`}
             style={{ background: "none", border: "none", padding: 2, cursor: "pointer", lineHeight: 0 }}
           >
             <Star fill={n <= active ? GOLD : EMPTY} />
@@ -197,12 +265,11 @@ export default function RatingForm({ writeReviewUrl, services, heading, sub }: P
         {RATING_LABELS[active] ?? RATING_LABELS[0]}
       </div>
 
-      {/* Everything below appears only after the visitor picks a rating */}
       {rating > 0 && (
         <>
-          <div style={{ height: 12 }} />
+          <div style={{ height: 14 }} />
 
-          {/* Optional service chips (quick taps, shared by both paths) */}
+          {/* Service chips (optional) */}
           {services.length > 0 && (
             <>
               <div
@@ -251,66 +318,36 @@ export default function RatingForm({ writeReviewUrl, services, heading, sub }: P
             </>
           )}
 
-          {isHigh ? (
-            // ── HAPPY PATH: straight to Google, no writing on our site ──
-            writeReviewUrl ? (
-              <div>
-                <p style={{ fontSize: 13.5, color: "#5d6f67", lineHeight: 1.75, margin: "0 auto 14px", maxWidth: 308 }}>
-                  يسعدنا أنّ تجربتك كانت رائعة! اكتب تقييمك على Google مباشرةً — <b style={{ color: "#1c2b25" }}>خطوة واحدة</b>.
-                </p>
-                <button
-                  onClick={goToGoogle}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 9,
-                    border: "none",
-                    cursor: "pointer",
-                    fontFamily: "var(--font-plex-arabic), sans-serif",
-                    fontSize: 15,
-                    fontWeight: 600,
-                    color: "#f3ecdd",
-                    background: GREEN,
-                    borderRadius: 13,
-                    padding: "13px 24px",
-                    boxShadow: "0 15px 28px -15px rgba(14,74,57,.85)",
-                  }}
-                >
-                  <span>أضف تقييمك على خرائط Google</span>
-                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M7 17L17 7M9 7h8v8" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <button className="ma-submit" onClick={saveAndThank} disabled={submitting} style={submitStyle}>
-                {submitting ? "جارٍ الإرسال…" : "إرسال التقييم"}
-              </button>
-            )
-          ) : (
-            // ── UNHAPPY PATH: private feedback, never sent to Google ──
-            <div>
-              <p style={{ fontSize: 13.5, color: "#5d6f67", lineHeight: 1.75, margin: "0 0 12px" }}>
-                نأسف لذلك — أخبرنا بما يمكننا تحسينه (اختياري). تصل ملاحظتك إلى فريقنا مباشرةً ولن تُنشر.
-              </p>
-              <textarea
-                className="ma-field"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="ما الذي لم يعجبك؟ (اختياري)"
-                rows={3}
-                style={{ ...fieldStyle, lineHeight: 1.65, resize: "none", minHeight: 84 }}
-              />
-              <input className="ma-field" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="رقم الجوال للتواصل (اختياري)" style={fieldStyle} />
-              <button className="ma-submit" onClick={saveAndThank} disabled={submitting} style={submitStyle}>
-                {submitting ? "جارٍ الإرسال…" : "إرسال"}
-              </button>
-            </div>
-          )}
+          {/* Review text editor */}
+          <textarea
+            className="ma-field"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder={isHigh ? "اكتب تقييمك بإيجاز…" : "اكتب ما الذي يمكننا تحسينه…"}
+            rows={3}
+            style={{ ...fieldStyle, lineHeight: 1.65, resize: "none", minHeight: 88 }}
+          />
+          <input
+            className="ma-field"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="الاسم (اختياري)"
+            style={fieldStyle}
+          />
 
           {error && (
-            <p style={{ background: "rgba(220,38,38,.07)", color: "#b4341f", borderRadius: 11, padding: "9px 12px", fontSize: 13, margin: "12px 0 0" }}>
+            <p style={{ background: "rgba(220,38,38,.07)", color: "#b4341f", borderRadius: 11, padding: "9px 12px", fontSize: 13, margin: "0 0 12px" }}>
               {error}
+            </p>
+          )}
+
+          <button className="ma-submit" onClick={submit} disabled={submitting} style={submitStyle}>
+            {submitting ? "جارٍ الإرسال…" : "إرسال التقييم"}
+          </button>
+
+          {isHigh && writeReviewUrl && (
+            <p style={{ marginTop: 8, fontSize: 12, color: "#9aa8a1" }}>
+              بعد الإرسال يمكنك نشره على Google بضغطة واحدة.
             </p>
           )}
         </>
@@ -318,19 +355,3 @@ export default function RatingForm({ writeReviewUrl, services, heading, sub }: P
     </div>
   );
 }
-
-const submitStyle: React.CSSProperties = {
-  width: "100%",
-  fontFamily: "var(--font-plex-arabic), sans-serif",
-  fontSize: 15.5,
-  fontWeight: 600,
-  letterSpacing: ".02em",
-  color: "#f3ecdd",
-  background: GREEN,
-  border: "none",
-  borderRadius: 14,
-  padding: 14,
-  cursor: "pointer",
-  boxShadow: "0 15px 28px -15px rgba(14,74,57,.85)",
-  transition: "all .2s",
-};
