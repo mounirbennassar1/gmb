@@ -1,16 +1,32 @@
 import type { Metadata } from "next";
-import { Cairo } from "next/font/google";
+import { Cormorant_Garamond, El_Messiri, IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 
-const cairo = Cairo({
-  variable: "--font-cairo",
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  display: "swap",
+});
+
+const messiri = El_Messiri({
+  variable: "--font-messiri",
   subsets: ["arabic", "latin"],
+  weight: ["500", "600", "700"],
+  display: "swap",
+});
+
+const plexArabic = IBM_Plex_Sans_Arabic({
+  variable: "--font-plex-arabic",
+  subsets: ["arabic", "latin"],
+  weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "قيّم تجربتك | مجمع عيادات د. مها دحلان الطبي",
-  description: "شاركنا رأيك في تجربتك مع العيادة وانشره على Google",
+  title: "قيّم تجربتك | عيادات د. مها دحلان",
+  description: "شاركنا رأيك في تجربتك مع عيادات د. مها دحلان للجلدية والتجميل بجدة",
+  icons: { icon: "/logo.png", apple: "/logo.png" },
 };
 
 export default function RootLayout({
@@ -19,7 +35,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={`${cairo.variable} h-full antialiased`}>
+    <html
+      lang="ar"
+      dir="rtl"
+      className={`${plexArabic.variable} ${messiri.variable} ${cormorant.variable} h-full antialiased`}
+    >
       <body className="min-h-full">{children}</body>
     </html>
   );

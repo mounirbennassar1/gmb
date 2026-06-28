@@ -45,3 +45,6 @@ next-env.d.ts
 
 # commit the env template
 !.env.example
+
+# local screenshots dropped into the repo root
+/Screenshot*.png

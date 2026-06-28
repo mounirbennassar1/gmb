@@ -12,16 +12,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'صيغة غير صحيحة' }, { status: 400 })
   }
 
-  const name = String(body.name ?? '').trim()
+  const rawName = String(body.name ?? '').trim()
+  // Name is optional on the landing page — fall back to an anonymous label.
+  const name = rawName.length >= 2 ? rawName.slice(0, 120) : 'زائر'
   const rating = Number(body.rating)
   const comment = body.comment ? String(body.comment).trim().slice(0, 2000) : null
   const phone = body.phone ? String(body.phone).trim().slice(0, 40) : null
   const email = body.email ? String(body.email).trim().slice(0, 200) : null
   const serviceType = body.serviceType ? String(body.serviceType).trim().slice(0, 120) : null
 
-  if (name.length < 2) {
-    return NextResponse.json({ error: 'الرجاء إدخال الاسم' }, { status: 400 })
-  }
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
     return NextResponse.json({ error: 'الرجاء اختيار عدد النجوم' }, { status: 400 })
   }

@@ -10,15 +10,41 @@ export type SiteSettings = {
   serviceTypes: string[]
 }
 
+// Gold tagline shown under the wordmark in the hero.
+export const CLINIC_TAGLINE = 'للجلدية والتجميل · جدة'
+
+// Rich service catalogue rendered as selectable chips on the landing page. The
+// label is stored on each review; the description appears beneath the chips when
+// selected. Keep the keys in sync with DEFAULT_SETTINGS.serviceTypes.
+export const SERVICE_DESC: Record<string, string> = {
+  'علاج حب الشباب وآثاره':
+    'الخيار الأول في جدة لعلاج حب الشباب وآثاره — أحدث أجهزة الليزر وبإشراف نخبة استشاريي الجلدية.',
+  'البوتوكس والفيلر':
+    'عيادة مها دحلان لتجميل الوجه — بوتوكس، فيلر جلدي، وعلاجات الإشراقة بأيدي خبراء معتمدين.',
+  'علاج الهالات والتصبّغات حول العين':
+    'برنامج طبي متخصص في علاج الهالات السوداء والتصبّغات حول العين بأحدث التقنيات في جدة.',
+  'العناية بالبشرة والهايدرافيشل':
+    'باقة متكاملة من جلسات تنظيف البشرة والهايدرافيشل وعلاج تساقط الشعر — MD Clinics.',
+  'علاج تساقط الشعر':
+    'حلول طبية متكاملة لعلاج تساقط الشعر — Regenera Evo، PRP، الميزوثيرابي، Exosome وغيرها.',
+  'علاج التصبّغات':
+    'برنامج علاج التصبّغات في مها دحلان — جلسات هادئة، خطة شخصية، ونتائج موثّقة.',
+  'علاج التشققات وعلامات التمدد':
+    'الفيلر الهجين المحفّز للكولاجين وفيلر الكالسيوم — حلول طبية لتشققات الحمل وعلامات التمدد.',
+  'نحت الجسم بتقنية التحفيز العضلي':
+    'تجربة HIFEM لنحت الجسم وتفعيل العضلات بدون جراحة — تجربة طبية فاخرة في عيادات د. مها دحلان.',
+}
+
 // Defaults are placeholders — edit them from the admin panel (الإعدادات).
 export const DEFAULT_SETTINGS: SiteSettings = {
-  clinicNameAr: 'عيادة مهد دهلان',
-  clinicNameEn: 'Mahad Dahlan Clinic',
-  headline: 'رأيك يهمّنا',
-  subheadline: 'شاركنا تجربتك في العيادة وساعد غيرك على الوصول إلى رعاية أفضل',
-  googlePlaceId: '',
+  clinicNameAr: 'عيادات د. مها دحلان',
+  clinicNameEn: 'MAHA DAHLAN',
+  headline: 'قيّم تجربتك',
+  subheadline: 'رأيك يساعدنا على الارتقاء بخدماتنا',
+  // MD Clinics (مجمع عيادات د. مها دحلان الطبي), Jeddah — verified Place ID.
+  googlePlaceId: 'ChIJv3KH0jjQwxURJSJMiSHc2MQ',
   googleWriteReviewUrl: '',
-  serviceTypes: ['استشارة عامة', 'الأسنان', 'الجلدية', 'التجميل', 'أخرى'],
+  serviceTypes: Object.keys(SERVICE_DESC),
 }
 
 const SCALAR_KEYS = [

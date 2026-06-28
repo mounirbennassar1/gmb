@@ -1,18 +1,56 @@
 @import "tailwindcss";
 
 :root {
-  --background: #eef2f7;
-  --foreground: #0f172a;
+  --background: #f1eee5;
+  --foreground: #22302b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-cairo);
+  --font-sans: var(--font-plex-arabic);
+  --font-serif: var(--font-cormorant);
+  --font-display: var(--font-messiri);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-cairo), system-ui, "Segoe UI", sans-serif;
+  font-family: var(--font-plex-arabic), system-ui, "Segoe UI", sans-serif;
+}
+
+/* Success check pop-in */
+@keyframes maScaleIn {
+  from {
+    transform: scale(0.55);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+::placeholder {
+  color: #a7b3ab;
+}
+
+/* Horizontal service chips: hide the scrollbar */
+.ma-scroll::-webkit-scrollbar {
+  display: none;
+}
+.ma-scroll {
+  scrollbar-width: none;
+}
+
+/* Inputs adopt the deep-green accent on focus */
+.ma-field:focus {
+  border-color: #0e4a39 !important;
+  background: #ffffff !important;
+}
+
+/* Submit button hover (not disabled) */
+.ma-submit:not(:disabled):hover {
+  background: #0c3f31 !important;
+  transform: translateY(-1px);
 }
