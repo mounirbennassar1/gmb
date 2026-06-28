@@ -23,10 +23,11 @@ const plexArabic = IBM_Plex_Sans_Arabic({
   display: "swap",
 });
 
+// Favicon / app icons come from app/icon.png and app/apple-icon.png
+// (Next.js metadata file conventions) — both copies of public/logo.png.
 export const metadata: Metadata = {
   title: "قيّم تجربتك | عيادات د. مها دحلان",
   description: "شاركنا رأيك في تجربتك مع عيادات د. مها دحلان للجلدية والتجميل بجدة",
-  icons: { icon: "/logo.png", apple: "/logo.png" },
 };
 
 export default function RootLayout({
