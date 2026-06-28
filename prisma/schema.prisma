@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+}
+
+model Review {
+  id            String   @id @default(cuid())
+  name          String
+  rating        Int
+  comment       String?
+  phone         String?
+  email         String?
+  serviceType   String?
+  source        String   @default("landing")
+  status        String   @default("new")
+  clickedGoogle Boolean  @default(false)
+  reply         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([rating])
+  @@index([status])
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
