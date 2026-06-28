@@ -196,7 +196,7 @@ export default async function Home() {
                     fontSize: 13,
                   }}
                 >
-                  كن أوّل من يشاركنا رأيه
+                  نسعد بسماع رأيك في تجربتك
                 </div>
               </div>
             )}
